@@ -1,6 +1,7 @@
 # (X)Emacs mode: -*- cperl -*-
 
 use strict;
+use warnings;
 
 =head1 Unit Test Package for Term::ProgressBar
 
@@ -8,30 +9,12 @@ This package tests the moving target functionality of Term::ProgressBar.
 
 =cut
 
-use Data::Dumper qw( Dumper );
-use FindBin      qw( $Bin );
-use Test         qw( ok plan );
+use Test::More tests => 7;
+use Test::Exception;
 
-use lib $Bin;
-use test qw( DATA_DIR
-             evcheck restore_output save_output );
+use Capture::Tiny qw(capture_stderr);
 
-BEGIN {
-  # 1 for compilation test,
-  plan tests  => 7,
-       todo   => [],
-}
-
-=head2 Test 1: compilation
-
-This test confirms that the test script and the modules it calls compiled
-successfully.
-
-=cut
-
-use Term::ProgressBar;
-
-ok 1, 1, 'compilation';
+use_ok 'Term::ProgressBar';
 
 Term::ProgressBar->__force_term (50);
 
@@ -53,25 +36,19 @@ Update it from 11 to 20.
 
 =cut
 
-{
+my $err = capture_stderr {
   my $p;
-  save_output('stderr', *STDERR{IO});
-  ok (evcheck(sub { $p = Term::ProgressBar->new(10); }, 'Count 1-20 (1)' ),
-      1, 'Count 1-20 (1)');
-  ok (evcheck(sub { $p->update($_) for 1..5  },  'Count 1-20 (2)' ),
-      1, 'Count 1-20 (2)');
-  ok (evcheck(sub { $p->target(20)    },         'Count 1-20 (3)' ),
-      1, 'Count 1-20 (3)');
-  ok (evcheck(sub { $p->update($_) for 11..20 }, 'Count 1-20 (4)' ),
-      1, 'Count 1-20 (4)');
-  my $err = restore_output('stderr');
+  lives_ok { $p = Term::ProgressBar->new(10); } 'Count 1-20 (1)';
+  lives_ok { $p->update($_) for 1..5  }    'Count 1-20 (2)';
+  lives_ok { $p->target(20)    }           'Count 1-20 (3)';
+  lives_ok { $p->update($_) for 11..20 }   'Count 1-20 (4)';
+};
 
-  $err =~ s!^.*\r!!gm;
-  print STDERR "ERR:\n$err\nlength: ", length($err), "\n"
+$err =~ s!^.*\r!!gm;
+diag "ERR:\n$err\nlength: " . length($err)
     if $ENV{TEST_DEBUG};
 
-  my @lines = split /\n/, $err;
+my @lines = split /\n/, $err;
 
-  ok $lines[-1], qr/\[=+\]/,            'Count 1-20 (5)';
-  ok $lines[-1], qr/^\s*100%/,          'Count 1-20 (6)';
-}
+like $lines[-1], qr/\[=+\]/,            'Count 1-20 (5)';
+like $lines[-1], qr/^\s*100%/,          'Count 1-20 (6)';

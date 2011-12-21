@@ -1,0 +1,42 @@
+{
+   "abstract" : "unknown",
+   "author" : [
+      "unknown"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Module::Build version 0.21, CPAN::Meta::Converter version 2.112621",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Term-ProgressBar",
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "Capture::Tiny" : "0.13",
+            "File::Temp" : 0,
+            "Test::Exception" : "0.31",
+            "Test::More" : "0.80"
+         }
+      },
+      "runtime" : {
+         "conflicts" : {},
+         "recommends" : {},
+         "requires" : {
+            "Class::MethodMaker" : "1.02",
+            "Term::ReadKey" : "2.14"
+         }
+      }
+   },
+   "provides" : {
+      "Term::ProgressBar" : {
+         "file" : "lib/Term/ProgressBar.pm",
+         "version" : "2.09"
+      }
+   },
+   "release_status" : "stable",
+   "version" : "2.09"
+}

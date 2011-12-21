@@ -1,6 +1,7 @@
 # (X)Emacs mode: -*- cperl -*-
 
 use strict;
+use warnings;
 
 =head1 Unit Test Package for Term::ProgressBar
 
@@ -8,34 +9,16 @@ This package tests the name functionality of Term::ProgressBar.
 
 =cut
 
-use Data::Dumper  qw( Dumper );
-use FindBin       qw( $Bin );
-use Test          qw( ok plan );
+use Test::More tests => 20;
+use Test::Exception;
 
-use lib $Bin;
-use test qw( DATA_DIR
-             evcheck restore_output save_output );
+use Capture::Tiny qw(capture_stderr);
 
-use constant MESSAGE1 => 'The Gospel of St. Jude';
-use constant NAME1    => 'Algenon';
-use constant NAME2    => 'Smegma';
+my $MESSAGE1 = 'The Gospel of St. Jude';
+my $NAME1    = 'Algenon';
+my $NAME2    = 'Smegma';
 
-BEGIN {
-  # 1 for compilation test,
-  plan tests  => 18,
-       todo   => [],
-}
-
-=head2 Test 1: compilation
-
-This test confirms that the test script and the modules it calls compiled
-successfully.
-
-=cut
-
-use Term::ProgressBar;
-
-ok 1, 1, 'compilation';
+use_ok 'Term::ProgressBar';
 
 Term::ProgressBar->__force_term (50);
 
@@ -60,47 +43,43 @@ Update it it from 1 to 10.
 
 {
   my $p;
-  save_output('stderr', *STDERR{IO});
-  ok (evcheck(sub {
-                $p = Term::ProgressBar->new({count => 10, name => NAME1});
-              },                                            'Count 1-10 ( 1)'),
-      1,                                                    'Count 1-10 ( 1)');
-  ok (evcheck(sub { $p->update($_) for 1..3  },             'Count 1-10 ( 2)'),
-      1,                                                    'Count 1-10 ( 2)');
-
-  my $err = restore_output('stderr');
+  my $err = capture_stderr {
+    lives_ok {
+                $p = Term::ProgressBar->new({count => 10, name => $NAME1});
+              } 'Count 1-10 ( 1)';
+    lives_ok { $p->update($_) for 1..3  } 'Count 1-10 ( 2)';
+  };
 
   $err =~ s!^.*\r!!gm;
-  print STDERR "ERR (1) :\n$err\nlength: ", length($err), "\n"
+  diag "ERR (1) :\n$err\nlength: " . length($err)
     if $ENV{TEST_DEBUG};
   my @lines = split /\n/, $err;
-  ok $lines[-1], qr/^@{[NAME1()]}: \s*\b30%/,                'Count 1-10 ( 3)';
+
+  like $lines[-1], qr/^@{[$NAME1]}: \s*\b30%/,                'Count 1-10 ( 3)';
   my ($bar, $space) = $lines[-1] =~ /\[(=*)(\s*)\]/;
   my $length = length($bar) + length($space);
   print STDERR
     ("LENGTHS (1) :BAR:", length($bar), ":SPACE:", length($space), "\n")
     if $ENV{TEST_DEBUG};
   my $barexpect = $length * 0.3;
-  my $ok = length($bar) > $barexpect -1 && length($bar) < $barexpect+1;
-  ok $ok;
+  cmp_ok length($bar), '>', $barexpect -1;
+  cmp_ok length($bar), '<', $barexpect+1;
 
-  save_output('stderr', *STDERR{IO});
 
-  ok (evcheck(sub { $p->message(MESSAGE1)    },             'Count 1-10 ( 5)'),
-      1,                                                    'Count 1-10 ( 5)');
-  ok (evcheck(sub { $p->update($_) for 6..10 },             'Count 1-10 ( 6)'),
-      1,                                                    'Count 1-10 ( 6)');
-  $err = restore_output('stderr');
+  $err = capture_stderr {
+    lives_ok { $p->message($MESSAGE1)    } 'Count 1-10 ( 5)';
+    lives_ok { $p->update($_) for 6..10 } 'Count 1-10 ( 6)';
+  };
 
   $err =~ s!^.*\r!!gm;
-  print STDERR "ERR (2) :\n$err\nlength: ", length($err), "\n"
+  diag "ERR (2) :\n$err\nlength: " . length($err)
     if $ENV{TEST_DEBUG};
 
   @lines = split /\n/, $err;
 
-  ok $lines[0], MESSAGE1,                                    'Count 1-10 ( 7)';
-  ok $lines[-1], qr/\[=+\]/,                                 'Count 1-10 ( 8)';
-  ok $lines[-1], qr/^@{[NAME1()]}: \s*100%/,                 'Count 1-10 ( 9)';
+  is $lines[0], $MESSAGE1,                                    'Count 1-10 ( 7)';
+  like $lines[-1], qr/\[=+\]/,                                 'Count 1-10 ( 8)';
+  like $lines[-1], qr/^@{[$NAME1]}: \s*100%/,                 'Count 1-10 ( 9)';
 }
 
 # -------------------------------------
@@ -125,45 +104,39 @@ Use v1 mode
 
 {
   my $p;
-  save_output('stderr', *STDERR{IO});
-  ok (evcheck(sub { $p = Term::ProgressBar->new(NAME2, 10); }, 
-                                                            'Count 1-10 ( 1)'),
-      1,                                                    'Count 1-10 ( 1)');
-  ok (evcheck(sub { $p->update($_) for 1..3  },             'Count 1-10 ( 2)'),
-      1,                                                    'Count 1-10 ( 2)');
-
-  my $err = restore_output('stderr');
+  my $err = capture_stderr {
+    lives_ok { $p = Term::ProgressBar->new($NAME2, 10); } 'Count 1-10 ( 1)';
+    lives_ok { $p->update($_) for 1..3  }                'Count 1-10 ( 2)';
+  };
 
   $err =~ s!^.*\r!!gm;
-  print STDERR "ERR (1) :\n$err\nlength: ", length($err), "\n"
+  diag "ERR (1) :\n$err\nlength: " . length($err)
     if $ENV{TEST_DEBUG};
   my @lines = split /\n/, $err;
-  ok $lines[-1], qr/^@{[NAME2()]}: \s*\b30%/,                'Count 1-10 ( 3)';
+
+  like $lines[-1], qr/^@{[$NAME2]}: \s*\b30%/,                'Count 1-10 ( 3)';
   my ($bar, $space) = $lines[-1] =~ /(\#*)(\s*)/;
   my $length = length($bar) + length($space);
-  print STDERR
-    ("LENGTHS (1) :BAR:", length($bar), ":SPACE:", length($space), "\n")
-    if $ENV{TEST_DEBUG};
+  diag
+    ("LENGTHS (1) :BAR:" . length($bar) . ":SPACE:" . length($space))
+      if $ENV{TEST_DEBUG};
   my $barexpect = $length * 0.3;
-  my $ok = length($bar) > $barexpect -1 && length($bar) < $barexpect+1;
-  ok $ok;
-
-  save_output('stderr', *STDERR{IO});
-
-  ok (evcheck(sub { $p->message(MESSAGE1)    },             'Count 1-10 ( 5)'),
-      1,                                                    'Count 1-10 ( 5)');
-  ok (evcheck(sub { $p->update($_) for 6..10 },             'Count 1-10 ( 6)'),
-      1,                                                    'Count 1-10 ( 6)');
-  $err = restore_output('stderr');
+  cmp_ok length($bar), '>', $barexpect -1;
+  cmp_ok length($bar), '<', $barexpect+1;
+  
+  $err = capture_stderr {
+    lives_ok { $p->message($MESSAGE1)    }  'Count 1-10 ( 5)';
+    lives_ok { $p->update($_) for 6..10 }  'Count 1-10 ( 6)';
+  };
 
   $err =~ s!^.*\r!!gm;
-  print STDERR "ERR (2) :\n$err\nlength: ", length($err), "\n"
+  diag "ERR (2) :\n$err\nlength: " . length($err)
     if $ENV{TEST_DEBUG};
 
   @lines = split /\n/, $err;
 
-  ok $lines[-1], qr/^@{[NAME2()]}: \s*\d+% \#*$/,            'Count 1-10 ( 8)';
-  ok $lines[-1], qr/^@{[NAME2()]}: \s*100%/,                 'Count 1-10 ( 9)';
+  like $lines[-1], qr/^@{[$NAME2]}: \s*\d+% \#*$/,            'Count 1-10 ( 8)';
+  like $lines[-1], qr/^@{[$NAME2]}: \s*100%/,                 'Count 1-10 ( 9)';
 }
 
 # -------------------------------------

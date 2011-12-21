@@ -1,6 +1,7 @@
 # (X)Emacs mode: -*- cperl -*-
 
 use strict;
+use warnings;
 
 =head1 Unit Test Package for Term::ProgressBar
 
@@ -8,21 +9,12 @@ This package tests the basic functionality of Term::ProgressBar.
 
 =cut
 
-use Data::Dumper 2.101 qw( Dumper );
-use FindBin 1.42 qw( $Bin );
-use Test 1.122 qw( ok plan );
+use Test::More tests => 11;
+use Test::Exception;
 
-use lib $Bin;
-use test qw( DATA_DIR
-             evcheck restore_output save_output );
+use Capture::Tiny qw(capture_stderr);
 
-use constant MESSAGE1 => 'Walking on the Milky Way';
-
-BEGIN {
-  # 1 for compilation test,
-  plan tests  => 11,
-       todo   => [],
-}
+my $MESSAGE1 = 'Walking on the Milky Way';
 
 =head2 Test 1: compilation
 
@@ -31,9 +23,7 @@ successfully.
 
 =cut
 
-use Term::ProgressBar;
-
-ok 1, 1, 'compilation';
+use_ok 'Term::ProgressBar';
 
 Term::ProgressBar->__force_term (50);
 
@@ -53,29 +43,24 @@ Update it it from 1 to 10.  Output a message halfway through.
 (7) Check bar number is 100%
 
 =cut
-
 {
-  my $p;
-  save_output('stderr', *STDERR{IO});
-  ok (evcheck(sub { $p = Term::ProgressBar->new(10); }, 'Count 1-10 (1)' ),
-      1, 'Count 1-10 (1)');
-  ok (evcheck(sub { $p->update($_) for 1..5  }, 'Count 1-10 (2)' ),
-      1, 'Count 1-10 (2)');
-  ok (evcheck(sub { $p->message(MESSAGE1)    }, 'Count 1-10 (3)' ),
-      1, 'Count 1-10 (3)');
-  ok (evcheck(sub { $p->update($_) for 6..10 }, 'Count 1-10 (4)' ),
-      1, 'Count 1-10 (4)');
-  my $err = restore_output('stderr');
+  my $err = capture_stderr {
+    my $p;
+    lives_ok { $p = Term::ProgressBar->new(10); } 'Count 1-10 (1)';
+    lives_ok { $p->update($_) for 1..5  }         'Count 1-10 (2)';
+    lives_ok { $p->message($MESSAGE1)    }         'Count 1-10 (3)';
+    lives_ok { $p->update($_) for 6..10 }         'Count 1-10 (4)';
+  };
 
   $err =~ s!^.*\r!!gm;
-  print STDERR "ERR:\n$err\nlength: ", length($err), "\n"
+  diag "ERR:\n$err\nlength: " . length($err)
     if $ENV{TEST_DEBUG};
 
   my @lines = split /\n/, $err;
 
-  ok $lines[0], MESSAGE1;
-  ok $lines[-1], qr/\[=+\]/,            'Count 1-10 (5)';
-  ok $lines[-1], qr/^\s*100%/,          'Count 1-10 (6)';
+  is $lines[0], $MESSAGE1;
+  like $lines[-1], qr/\[=+\]/,            'Count 1-10 (5)';
+  like $lines[-1], qr/^\s*100%/,          'Count 1-10 (6)';
 }
 
 # -------------------------------------
@@ -92,18 +77,15 @@ This is to check that message preserves the progress bar value correctly.
 =cut
 
 {
-  my $p;
-  save_output('stderr', *STDERR{IO});
-  ok (evcheck(sub { $p = Term::ProgressBar->new(100); }, 'Message Check ( 1)'),
-      1,                                                 'Message Check ( 1)');
-  ok (evcheck(sub { for (0..100) { $p->update($_); $p->message("Hello") } },
-              'Message Check ( 2)',), 
-      1,                                                 'Message Check ( 2)');
-  my $err = restore_output('stderr');
+  my $err = capture_stderr {
+    my $p;
+    lives_ok { $p = Term::ProgressBar->new(100); } 'Message Check ( 1)';
+    lives_ok { for (0..100) { $p->update($_); $p->message("Hello") } }  'Message Check ( 2)';
+  };
 
   my @err_lines = split /\n/, $err;
   (my $last_line = $err_lines[-1]) =~ tr/\r//d;
-  ok substr($last_line, 0, 4), '100%',               'Message Check ( 3)';
+  is substr($last_line, 0, 4), '100%',               'Message Check ( 3)';
 }
 
 # ----------------------------------------------------------------------------

@@ -1,6 +1,7 @@
 # (X)Emacs mode: -*- cperl -*-
 
 use strict;
+use warnings;
 
 =head1 Unit Test Package for Term::ProgressBar
 
@@ -8,32 +9,15 @@ This package tests the basic functionality of Term::ProgressBar.
 
 =cut
 
-use Data::Dumper qw( Dumper );
-use FindBin      qw( $Bin );
-use Test         qw( ok plan );
+use Test::More tests => 8;
+use Test::Exception;
 
-use lib $Bin;
-use test qw( DATA_DIR
-             evcheck restore_output save_output );
+use Capture::Tiny qw(capture_stderr);
 
-use constant MESSAGE1 => 'Walking on the Milky Way';
+my $MESSAGE1 = 'Walking on the Milky Way';
 
-BEGIN {
-  # 1 for compilation test,
-  plan tests  => 8,
-       todo   => [],
-}
+use_ok 'Term::ProgressBar';
 
-=head2 Test 1: compilation
-
-This test confirms that the test script and the modules it calls compiled
-successfully.
-
-=cut
-
-use Term::ProgressBar;
-
-ok 1, 1, 'compilation';
 
 Term::ProgressBar->__force_term (50);
 
@@ -55,26 +39,21 @@ Update it it from 1 to 10.
 =cut
 
 {
-  my $p;
-  save_output('stderr', *STDERR{IO});
-  ok (evcheck(sub { $p = Term::ProgressBar->new('bob', 10); },
-              'Count 1-10 (1)' ),
-      1, 'Count 1-10 (1)');
-  ok (evcheck(sub { $p->update($_) for 1..5  }, 'Count 1-10 (2)' ),
-      1, 'Count 1-10 (2)');
-  ok (evcheck(sub { $p->message(MESSAGE1)    }, 'Count 1-10 (3)' ),
-      1, 'Count 1-10 (3)');
-  ok (evcheck(sub { $p->update($_) for 6..10 }, 'Count 1-10 (4)' ),
-      1, 'Count 1-10 (4)');
-  my $err = restore_output('stderr');
+  my $err = capture_stderr {
+    my $p;
+    lives_ok { $p = Term::ProgressBar->new('bob', 10); } 'Count 1-10 (1)';
+    lives_ok { $p->update($_) for 1..5  } 'Count 1-10 (2)';
+    lives_ok { $p->message($MESSAGE1)    } 'Count 1-10 (3)';
+    lives_ok { $p->update($_) for 6..10 } 'Count 1-10 (4)';
+  };
 
   $err =~ s!^.*\r!!gm;
-  print STDERR "ERR:\n$err\nlength: ", length($err), "\n"
+  diag "ERR:\n$err\nlength: ", length($err)
     if $ENV{TEST_DEBUG};
 
   my @lines = split /\n/, $err;
 
-  ok $lines[0], MESSAGE1;
-  ok $lines[-1], qr/bob:\s+\d+% \#+/,            'Count 1-10 (6)';
-  ok $lines[-1], qr/^bob:\s+100%/,               'Count 1-10 (7)';
+  is $lines[0], $MESSAGE1;
+  like $lines[-1], qr/bob:\s+\d+% \#+/,            'Count 1-10 (6)';
+  like $lines[-1], qr/^bob:\s+100%/,               'Count 1-10 (7)';
 }
