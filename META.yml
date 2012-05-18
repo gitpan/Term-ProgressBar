@@ -1,7 +1,7 @@
 ---
-abstract: unknown
+abstract: 'provide a progress meter on a standard terminal'
 author:
-  - 'Martyn J. Pearce '
+  - 'Martyn J. Pearce'
 build_requires:
   Capture::Tiny: 0.13
   File::Temp: 0
@@ -11,7 +11,7 @@ configure_requires:
   ExtUtils::MakeMaker: 0
 dynamic_config: 1
 generated_by: 'ExtUtils::MakeMaker version 6.62, CPAN::Meta::Converter version 2.112150'
-license: unknown
+license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
   version: 1.4
@@ -21,8 +21,11 @@ no_index:
     - t
     - inc
 requires:
+  Carp: 0
   Class::MethodMaker: 1.02
+  Fatal: 0
+  POSIX: 0
   Term::ReadKey: 2.14
 resources:
   repository: https://github.com/szabgab/Term-ProgressBar
-version: 2.12
+version: 2.13
