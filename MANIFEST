@@ -15,6 +15,7 @@ README
 t/compat.t
 t/eta-linear.t
 t/name.t
+t/silent.t
 t/v1-message.t
 t/v2-message.t
 t/v2-mobile.t
