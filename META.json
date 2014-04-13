@@ -4,7 +4,7 @@
       "Martyn J. Pearce"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "ExtUtils::MakeMaker version 6.64, CPAN::Meta::Converter version 2.131560",
+   "generated_by" : "ExtUtils::MakeMaker version 6.82, CPAN::Meta::Converter version 2.132830",
    "license" : [
       "perl_5"
    ],
@@ -49,5 +49,5 @@
          "url" : "https://github.com/szabgab/Term-ProgressBar"
       }
    },
-   "version" : "2.14"
+   "version" : "2.15"
 }
