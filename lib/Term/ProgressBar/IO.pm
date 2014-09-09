@@ -1,8 +1,12 @@
+package Term::ProgressBar::IO;
+use strict;
+use warnings;
+
+our $VERSION = '2.16';
+
 #  This program is free software; you can redistribute it and/or
 #  modify it under the same terms as Perl itself.
 # Copyright 2014 by Don Armstrong <don@donarmstrong.com>.
-
-package Term::ProgressBar::IO;
 
 =head1 NAME
 
@@ -31,18 +35,9 @@ None known.
 
 =cut
 
-use warnings;
-use strict;
-use vars qw($VERSION $DEBUG);
-
 use parent qw(Term::ProgressBar);
 use Carp;
 use Fcntl qw(:seek);
-
-BEGIN{
-     $VERSION = q(2.15);
-     $DEBUG = 0 unless defined $DEBUG;
-}
 
 =head1 METHODS
 
